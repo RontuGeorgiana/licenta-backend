@@ -1,7 +1,8 @@
-import { Entity, Index, Column } from 'typeorm';
-import { BaseEntity } from 'src/common/base/base-entity.class';
 import { ApiHideProperty } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
+import { BaseEntity } from 'src/common/base/base-entity.class';
+import { Membership } from 'src/memberships/entities/membership.entity';
+import { Column, Entity, Index, OneToMany } from 'typeorm';
 
 @Entity()
 export class User extends BaseEntity {
@@ -19,4 +20,7 @@ export class User extends BaseEntity {
   @Exclude()
   @Column({ type: 'text', nullable: true })
   password: string;
+
+  @OneToMany(() => Membership, (membership) => membership.user)
+  memberships: Membership[];
 }
