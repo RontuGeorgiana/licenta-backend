@@ -1,3 +1,4 @@
+import { hash } from 'bcrypt';
 import {
   BadRequestException,
   Injectable,
@@ -19,7 +20,12 @@ export class UsersService {
     let user: User;
 
     try {
-      const userEntity = this.userRepository.create(createUserDto);
+      const hashedPass = hash(createUserDto.password, 10);
+
+      const userEntity = this.userRepository.create({
+        ...createUserDto,
+        password: await hashedPass,
+      });
       user = await this.userRepository.save(userEntity);
 
       return user;
@@ -45,6 +51,23 @@ export class UsersService {
       });
     }
 
+    return user;
+  }
+
+  public async getUserByEmail(email: string) {
+    if (!email) {
+      throw new BadRequestException({
+        error: { email },
+      });
+    }
+
+    const user = this.userRepository.findOne({ email });
+
+    if (!user) {
+      throw new NotFoundException({
+        error: { email },
+      });
+    }
     return user;
   }
 }
