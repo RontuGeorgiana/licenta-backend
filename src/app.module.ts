@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AuthModule } from './auth/auth.module';
 import { CommonModule } from './common/common.module';
 import { TypeOrmConfigService } from './common/providers/TypeOrmConfigService.service';
 import { MembershipsModule } from './memberships/memberships.module';
@@ -20,6 +21,7 @@ import { UsersModule } from './users/users.module';
     UsersModule,
     TeamsModule,
     MembershipsModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],

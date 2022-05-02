@@ -1,4 +1,4 @@
-import { hash } from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import {
   BadRequestException,
   Injectable,
@@ -20,7 +20,7 @@ export class UsersService {
     let user: User;
 
     try {
-      const hashedPass = hash(createUserDto.password, 10);
+      const hashedPass = bcrypt.hash(createUserDto.password, 10);
 
       const userEntity = this.userRepository.create({
         ...createUserDto,

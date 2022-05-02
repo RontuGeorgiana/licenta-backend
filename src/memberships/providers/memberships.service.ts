@@ -25,7 +25,19 @@ export class MembershipsService {
   public async createMembership(data: CreateMembershipDto) {
     const team = await this.teamsService.getTeamById(data.teamId);
 
+    if (!team) {
+      throw new NotFoundException({
+        error: data.teamId,
+      });
+    }
+
     const user = await this.usersService.getUserById(data.userId);
+
+    if (!user) {
+      throw new NotFoundException({
+        error: data.userId,
+      });
+    }
 
     const membership: Partial<Membership> = {
       userId: user.id,
