@@ -12,6 +12,7 @@ import { MembershipsService } from 'src/memberships/providers/memberships.servic
 import { Repository } from 'typeorm';
 import { CreateTeamDto } from '../dtos/create-team.dto';
 import { Team } from '../entities/team.entity';
+import { User } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class TeamsService {
@@ -22,7 +23,7 @@ export class TeamsService {
     private readonly membershipsService: MembershipsService,
   ) {}
 
-  public async createTeam(userId: number, { name }: CreateTeamDto) {
+  public async createTeam(user: User, { name }: CreateTeamDto) {
     const team: Partial<Team> = { name };
     let dbTeam;
     let result;
@@ -33,12 +34,12 @@ export class TeamsService {
       result = await this.teamRepository.save(dbTeam);
     } catch (error) {
       throw new BadRequestException({
-        error: { team },
+        error: { message: `team couldn't be created` },
       });
     }
 
     const ownerMembership = {
-      userId,
+      userId: user.id,
       teamId: dbTeam.id,
       role: Role.Owner,
     };
@@ -66,7 +67,7 @@ export class TeamsService {
     return team;
   }
 
-  public async getTeamsByUser(userId: number): Promise<Object[]> {
+  public async getTeamsByUser(user: User): Promise<any> {
     const query = this.teamRepository
       .createQueryBuilder('team')
       .select(['team.id', 'team.name'])
@@ -74,7 +75,7 @@ export class TeamsService {
         'team.memberships',
         Membership,
         'memberships',
-        `team.id = memberships.teamId AND memberships.userId = ${userId}`,
+        `team.id = memberships.teamId AND memberships.userId = ${user.id}`,
       );
 
     try {

@@ -17,8 +17,6 @@ export class UsersService {
   ) {}
 
   public async addUser(createUserDto: CreateUserDto) {
-    let user: User;
-
     try {
       const hashedPass = bcrypt.hash(createUserDto.password, 10);
 
@@ -26,9 +24,9 @@ export class UsersService {
         ...createUserDto,
         password: await hashedPass,
       });
-      user = await this.userRepository.save(userEntity);
-
-      return user;
+      const { password, deletedOn, createdOn, updatedOn, ...result } =
+        await this.userRepository.save(userEntity);
+      return result;
     } catch (error) {
       throw new BadRequestException({
         error: { error, createUserDto },

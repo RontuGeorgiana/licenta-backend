@@ -51,7 +51,7 @@ export class MembershipsService {
       return result;
     } catch (error) {
       throw new BadRequestException({
-        error,
+        error: { message: 'membership failed to create' },
       });
     }
   }
