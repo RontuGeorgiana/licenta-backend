@@ -7,7 +7,6 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Role } from 'src/common/enums/role.enum';
-import { Membership } from 'src/memberships/entities/membership.entity';
 import { MembershipsService } from 'src/memberships/providers/memberships.service';
 import { Repository } from 'typeorm';
 import { CreateTeamDto } from '../dtos/create-team.dto';
@@ -70,25 +69,19 @@ export class TeamsService {
   public async getTeamsByUser(user: User): Promise<any> {
     const query = this.teamRepository
       .createQueryBuilder('team')
-      .select(['team.id', 'team.name'])
-      .leftJoinAndMapOne(
-        'team.memberships',
-        Membership,
-        'memberships',
-        `team.id = memberships.teamId AND memberships.userId = ${user.id}`,
-      );
+      .select(['team.id', 'team.name', 'memberships.role'])
+      .where(`memberships.userId = ${user.id}`)
+      .leftJoin('team.memberships', 'memberships')
+      .leftJoinAndSelect('team.spaces', 'spaces');
 
     try {
-      const results = await query.getRawMany();
-      const response = results.map(
-        ({ team_id, team_name, memberships_role }) => {
-          return {
-            id: team_id,
-            name: team_name,
-            role: memberships_role,
-          };
-        },
-      );
+      const results = await query.getMany();
+      const response = results.map(({ memberships, ...team }) => {
+        return {
+          ...team,
+          role: memberships[0].role,
+        };
+      });
       return response;
     } catch (error) {
       throw new BadRequestException({

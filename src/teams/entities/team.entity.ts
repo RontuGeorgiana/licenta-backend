@@ -1,5 +1,6 @@
 import { BaseEntity } from 'src/common/base/base-entity.class';
 import { Membership } from 'src/memberships/entities/membership.entity';
+import { Space } from 'src/spaces/entities/space.entity';
 import { Column, Entity, OneToMany } from 'typeorm';
 
 @Entity()
@@ -9,4 +10,7 @@ export class Team extends BaseEntity {
 
   @OneToMany(() => Membership, (membership) => membership.team)
   memberships: Membership[];
+
+  @OneToMany(() => Space, (space) => space.team)
+  spaces: Space[];
 }
