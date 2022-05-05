@@ -8,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from '../dtos/create-user.dto';
 import { User } from '../entities/user.entity';
+import { Membership } from 'src/memberships/entities/membership.entity';
 
 @Injectable()
 export class UsersService {
@@ -67,5 +68,37 @@ export class UsersService {
       });
     }
     return user;
+  }
+
+  public async getUserRole(userId: number, teamId: number) {
+    if (!userId) {
+      throw new BadRequestException({
+        error: { userId },
+      });
+    }
+    if (!teamId) {
+      throw new BadRequestException({
+        error: { teamId },
+      });
+    }
+    const querry = this.userRepository
+      .createQueryBuilder('user')
+      .select(['user.id'])
+      .where(`user.id = ${userId}`)
+      .leftJoinAndMapOne(
+        'user.memberships',
+        Membership,
+        'membership',
+        `user.id = membership.userId AND membership.teamId = ${teamId}`,
+      );
+
+    try {
+      const role = await querry.getRawOne();
+      return role.membership_role;
+    } catch (error) {
+      throw new BadRequestException({
+        error,
+      });
+    }
   }
 }

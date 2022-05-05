@@ -44,7 +44,7 @@ export class TeamsService {
       role: Role.Owner,
     };
 
-    await this.membershipsService.createMembership(ownerMembership);
+    await this.membershipsService.createMembership(ownerMembership, null, true);
 
     return result;
   }

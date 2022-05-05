@@ -6,7 +6,9 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { Role } from 'src/common/enums/role.enum';
 import { TeamsService } from 'src/teams/providers/teams.service';
+import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/providers/users.service';
 import { Repository } from 'typeorm';
 import { CreateMembershipDto } from '../dto/create-membership.dto';
@@ -22,7 +24,35 @@ export class MembershipsService {
     private readonly usersService: UsersService,
   ) {}
 
-  public async createMembership(data: CreateMembershipDto) {
+  public async createMembership(
+    data: CreateMembershipDto,
+    operator: User,
+    systemAction: boolean,
+  ) {
+    if (!systemAction) {
+      if (!operator) {
+        throw new BadRequestException({ operator });
+      }
+      const operatorRole = await this.usersService.getUserRole(
+        operator.id,
+        data.teamId,
+      );
+
+      if (
+        ![Role.Admin.valueOf(), Role.Owner.valueOf()].includes(operatorRole)
+      ) {
+        throw new BadRequestException({
+          error: { operatorRole },
+        });
+      }
+
+      if (data.role === Role.Owner && operatorRole !== Role.Owner) {
+        throw new BadRequestException({
+          error: { operatorRole, role: data.role },
+        });
+      }
+    }
+
     const team = await this.teamsService.getTeamById(data.teamId);
 
     if (!team) {
@@ -58,7 +88,28 @@ export class MembershipsService {
 
   public async updateMembership(
     data: CreateMembershipDto,
+    operator: User,
   ): Promise<Membership> {
+    if (!operator) {
+      throw new BadRequestException({ operator });
+    }
+    const operatorRole = await this.usersService.getUserRole(
+      operator.id,
+      data.teamId,
+    );
+
+    if (![Role.Admin.valueOf(), Role.Owner.valueOf()].includes(operatorRole)) {
+      throw new BadRequestException({
+        error: { operatorRole },
+      });
+    }
+
+    if (data.role === Role.Owner && operatorRole !== Role.Owner) {
+      throw new BadRequestException({
+        error: { operatorRole, role: data.role },
+      });
+    }
+
     const membership = await this.membershipRepository
       .createQueryBuilder('membership')
       .select(['membership.id', 'membership.role'])
