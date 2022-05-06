@@ -1,7 +1,8 @@
 import { Exclude } from 'class-transformer';
 import { BaseEntity } from 'src/common/base/base-entity.class';
+import { Folder } from 'src/folders/entities/folder.entity';
 import { Team } from 'src/teams/entities/team.entity';
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 
 @Entity()
 export class Space extends BaseEntity {
@@ -15,4 +16,7 @@ export class Space extends BaseEntity {
   @ManyToOne(() => Team, (team) => team.spaces)
   @JoinColumn({ name: 'team_id' })
   team: Team;
+
+  @OneToMany(() => Folder, (folder) => folder.space)
+  folders: Folder[];
 }

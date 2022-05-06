@@ -126,4 +126,23 @@ export class SpacesService {
       });
     }
   }
+
+  // public async getTeamBySpace(spaceId: number) {
+  //   if (!spaceId) {
+  //     throw new BadRequestException({
+  //       error: {
+  //         spaceId,
+  //       },
+  //     });
+  //   }
+
+  //   try {
+  //     const space = await this.spaceRepository.findOne(spaceId);
+  //     return space.teamId;
+  //   } catch (error) {
+  //     throw new BadRequestException({
+  //       error,
+  //     });
+  //   }
+  // }
 }
