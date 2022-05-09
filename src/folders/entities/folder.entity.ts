@@ -15,7 +15,7 @@ export class Folder extends BaseEntity {
   @Column({ name: 'parent' })
   parent: number;
 
-  @Column({ name: 'children' })
+  @Column('int', { name: 'children', array: true })
   children: number[];
 
   @ManyToOne(() => Space, (space) => space.folders)
