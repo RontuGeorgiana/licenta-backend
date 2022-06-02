@@ -18,11 +18,15 @@ export class Membership extends BaseEntity {
   @Column({ name: 'role' })
   role: Role;
 
-  @ManyToOne(() => User, (user) => user.memberships)
+  @ManyToOne(() => User, (user) => user.memberships, {
+    orphanedRowAction: 'delete',
+  })
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @ManyToOne(() => Team, (team) => team.memberships)
+  @ManyToOne(() => Team, (team) => team.memberships, {
+    orphanedRowAction: 'delete',
+  })
   @JoinColumn({ name: 'team_id' })
   team: Team;
 }

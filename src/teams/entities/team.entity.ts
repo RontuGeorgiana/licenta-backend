@@ -8,9 +8,11 @@ export class Team extends BaseEntity {
   @Column({ name: 'name' })
   name: string;
 
-  @OneToMany(() => Membership, (membership) => membership.team)
+  @OneToMany(() => Membership, (membership) => membership.team, {
+    cascade: true,
+  })
   memberships: Membership[];
 
-  @OneToMany(() => Space, (space) => space.team)
+  @OneToMany(() => Space, (space) => space.team, { cascade: true })
   spaces: Space[];
 }

@@ -12,13 +12,15 @@ export class Folder extends BaseEntity {
   @Column({ name: 'name' })
   name: string;
 
-  @Column({ name: 'parent' })
+  @Column({ name: 'parent', nullable: true })
   parent: number;
 
-  @Column('int', { name: 'children', array: true })
+  @Column('int', { name: 'children', array: true, nullable: true })
   children: number[];
 
-  @ManyToOne(() => Space, (space) => space.folders)
+  @ManyToOne(() => Space, (space) => space.folders, {
+    orphanedRowAction: 'delete',
+  })
   @JoinColumn({ name: 'space_id' })
   space: Space;
 }

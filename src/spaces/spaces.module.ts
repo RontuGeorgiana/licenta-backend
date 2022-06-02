@@ -10,6 +10,6 @@ import { SpacesService } from './providers/spaces.service';
   imports: [TypeOrmModule.forFeature([Space]), UsersModule, TeamsModule],
   providers: [SpacesService],
   controllers: [SpacesController],
-  exports: [],
+  exports: [SpacesService],
 })
 export class SpacesModule {}
