@@ -9,6 +9,7 @@ import { TypeOrmConfigService } from './common/providers/TypeOrmConfigService.se
 import { FoldersModule } from './folders/folders.module';
 import { MembershipsModule } from './memberships/memberships.module';
 import { SpacesModule } from './spaces/spaces.module';
+import { TasksModule } from './tasks/tasks.module';
 import { TeamsModule } from './teams/teams.module';
 import { UsersModule } from './users/users.module';
 
@@ -26,6 +27,7 @@ import { UsersModule } from './users/users.module';
     SpacesModule,
     FoldersModule,
     AuthModule,
+    TasksModule,
   ],
   controllers: [AppController],
   providers: [AppService],

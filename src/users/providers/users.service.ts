@@ -1,20 +1,25 @@
-import * as bcrypt from 'bcryptjs';
 import {
   BadRequestException,
+  forwardRef,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import * as bcrypt from 'bcryptjs';
+import { AuthService } from 'src/auth/providers/auth.service';
+import { Membership } from 'src/memberships/entities/membership.entity';
 import { Repository } from 'typeorm';
 import { CreateUserDto } from '../dtos/create-user.dto';
 import { User } from '../entities/user.entity';
-import { Membership } from 'src/memberships/entities/membership.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @Inject(forwardRef(() => AuthService))
+    private readonly authService: AuthService,
   ) {}
 
   public async addUser(createUserDto: CreateUserDto) {
@@ -25,8 +30,9 @@ export class UsersService {
         ...createUserDto,
         password: await hashedPass,
       });
-      const { password, deletedOn, createdOn, updatedOn, ...result } =
+      const { password, deletedOn, createdOn, updatedOn, ...data } =
         await this.userRepository.save(userEntity);
+      const result = await this.authService.login(data);
       return result;
     } catch (error) {
       throw new BadRequestException({
@@ -35,16 +41,20 @@ export class UsersService {
     }
   }
 
-  public async getUserById(userId: number) {
-    if (!userId) {
+  public async getUserById(userId: number, nullable: boolean = false) {
+    if (!userId && !nullable) {
       throw new BadRequestException({
         error: { userId },
       });
     }
 
+    if (!userId && nullable) {
+      return null;
+    }
+
     const user = this.userRepository.findOne(userId);
 
-    if (!user) {
+    if (!user && !nullable) {
       throw new NotFoundException({
         error: { userId },
       });
@@ -68,6 +78,28 @@ export class UsersService {
       });
     }
     return user;
+  }
+
+  public async getUsersByEmails(emails: string[]) {
+    if (!emails || emails.length === 0) {
+      throw new BadRequestException({
+        error: { emails },
+      });
+    }
+
+    const querry = this.userRepository
+      .createQueryBuilder('user')
+      .select(['user.id', 'user.firstName', 'user.lastName', 'user.email'])
+      .where(`user.email IN ${emails}`);
+
+    try {
+      const result = await querry.getMany();
+      return result;
+    } catch (error) {
+      throw new BadRequestException({
+        error,
+      });
+    }
   }
 
   public async getUserRole(userId: number, teamId: number) {

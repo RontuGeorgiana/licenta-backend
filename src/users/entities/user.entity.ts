@@ -21,8 +21,6 @@ export class User extends BaseEntity {
   @Column({ type: 'text', nullable: true })
   password: string;
 
-  @OneToMany(() => Membership, (membership) => membership.user, {
-    cascade: true,
-  })
+  @OneToMany(() => Membership, (membership) => membership.user)
   memberships: Membership[];
 }

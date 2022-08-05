@@ -1,13 +1,14 @@
-import * as bcrypt from 'bcryptjs';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { UsersService } from 'src/users/providers/users.service';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcryptjs';
+import { UsersService } from 'src/users/providers/users.service';
 import { JwtPayload } from '../interfaces/JwtPayload.interface';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private usersService: UsersService,
+    @Inject(forwardRef(() => UsersService))
+    private readonly usersService: UsersService,
     private jwtService: JwtService,
   ) {}
 

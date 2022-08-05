@@ -1,7 +1,10 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  Param,
+  Patch,
   Post,
   Query,
   UseFilters,
@@ -11,10 +14,10 @@ import { BaseExceptionFilter } from '@nestjs/core';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/auth/jwt-strategy/jwt-auth.guard';
 import { UserParam } from 'src/common/decorators/user.decorator';
+import { User } from 'src/users/entities/user.entity';
 import { CreateTeamDto } from '../dtos/create-team.dto';
 import { Team } from '../entities/team.entity';
 import { TeamsService } from '../providers/teams.service';
-import { User } from 'src/users/entities/user.entity';
 
 @UseFilters(BaseExceptionFilter)
 @ApiTags('teams')
@@ -37,5 +40,24 @@ export class TeamsController {
   @Get()
   async getTeamsByUsers(@UserParam() user: User): Promise<any> {
     return this.teamsService.getTeamsByUser(user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('/rename-team/:id')
+  async renameTeam(
+    @Param('id') id: number,
+    @Query('newName') newName: string,
+    @UserParam() user: User,
+  ): Promise<Team> {
+    return this.teamsService.editTeamById(id, newName, user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id')
+  async deleteTeam(
+    @Param('id') id: number,
+    @UserParam() user: User,
+  ): Promise<Team> {
+    return this.teamsService.deleteTeamById(id, user);
   }
 }

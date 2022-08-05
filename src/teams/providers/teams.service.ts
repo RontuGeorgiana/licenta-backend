@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ForbiddenException,
   forwardRef,
   Inject,
   Injectable,
@@ -8,10 +9,12 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Role } from 'src/common/enums/role.enum';
 import { MembershipsService } from 'src/memberships/providers/memberships.service';
+import { SpacesService } from 'src/spaces/providers/spaces.service';
+import { User } from 'src/users/entities/user.entity';
+import { UsersService } from 'src/users/providers/users.service';
 import { Repository } from 'typeorm';
 import { CreateTeamDto } from '../dtos/create-team.dto';
 import { Team } from '../entities/team.entity';
-import { User } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class TeamsService {
@@ -20,6 +23,9 @@ export class TeamsService {
     private readonly teamRepository: Repository<Team>,
     @Inject(forwardRef(() => MembershipsService))
     private readonly membershipsService: MembershipsService,
+    private readonly usersService: UsersService,
+    @Inject(forwardRef(() => SpacesService))
+    private readonly spacesService: SpacesService,
   ) {}
 
   public async createTeam(user: User, { name }: CreateTeamDto) {
@@ -38,7 +44,7 @@ export class TeamsService {
     }
 
     const ownerMembership = {
-      userId: user.id,
+      email: user.email,
       teamId: dbTeam.id,
       role: Role.Owner,
     };
@@ -83,6 +89,106 @@ export class TeamsService {
         };
       });
       return response;
+    } catch (error) {
+      throw new BadRequestException({
+        error,
+      });
+    }
+  }
+
+  public async editTeamById(
+    teamId: number,
+    newName: string,
+    user: User,
+  ): Promise<Team> {
+    if (!user) {
+      throw new BadRequestException({
+        error: { user },
+      });
+    }
+
+    if (!teamId) {
+      throw new BadRequestException({
+        error: { teamId },
+      });
+    }
+
+    const userRole = await this.usersService.getUserRole(user.id, teamId);
+
+    if (![Role.Admin, Role.Owner].includes(userRole)) {
+      throw new ForbiddenException({
+        error: { userRole },
+      });
+    }
+
+    let teamToUpdate = await this.teamRepository.findOne(teamId);
+
+    if (!teamToUpdate) {
+      throw new BadRequestException({
+        error: { teamToUpdate },
+      });
+    }
+
+    try {
+      teamToUpdate = { ...teamToUpdate, name: newName };
+      const result = await this.teamRepository.save(teamToUpdate);
+      return result;
+    } catch (error) {
+      throw new BadRequestException({
+        error,
+      });
+    }
+  }
+
+  public async deleteTeamById(teamId: number, user: User): Promise<Team> {
+    if (!user) {
+      throw new BadRequestException({
+        error: { user },
+      });
+    }
+
+    if (!teamId) {
+      throw new BadRequestException({
+        error: { teamId },
+      });
+    }
+
+    const userRole = await this.usersService.getUserRole(user.id, teamId);
+
+    if (userRole !== Role.Owner.valueOf()) {
+      throw new ForbiddenException({
+        error: {
+          userRole,
+        },
+      });
+    }
+
+    let teamToDelete = await this.teamRepository.findOne(teamId);
+
+    if (!teamToDelete) {
+      throw new NotFoundException({
+        error: { teamId },
+      });
+    }
+
+    teamToDelete = {
+      ...teamToDelete,
+      deletedOn: new Date(),
+    };
+
+    const spaces = await this.spacesService.deleteSpacesByTeamIds([
+      teamToDelete.id,
+    ]);
+
+    if (!spaces) {
+      throw new BadRequestException({
+        error: { teamId },
+      });
+    }
+
+    try {
+      const result = await this.teamRepository.save(teamToDelete);
+      return result;
     } catch (error) {
       throw new BadRequestException({
         error,

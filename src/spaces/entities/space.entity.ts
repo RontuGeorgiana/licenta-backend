@@ -13,10 +13,10 @@ export class Space extends BaseEntity {
   @Column({ name: 'name' })
   name: string;
 
-  @ManyToOne(() => Team, (team) => team.spaces, { orphanedRowAction: 'delete' })
+  @ManyToOne(() => Team, (team) => team.spaces)
   @JoinColumn({ name: 'team_id' })
   team: Team;
 
-  @OneToMany(() => Folder, (folder) => folder.space, { cascade: true })
+  @OneToMany(() => Folder, (folder) => folder.space)
   folders: Folder[];
 }

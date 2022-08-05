@@ -1,17 +1,17 @@
-import { Module } from '@nestjs/common';
-import { AuthService } from './providers/auth.service';
-import { UsersModule } from '../users/users.module';
-import { PassportModule } from '@nestjs/passport';
-import { LocalStrategy } from './local-strategy/local.strategy';
-import { AuthController } from './controllers/auth.controller';
-import { JwtModule } from '@nestjs/jwt';
+import { forwardRef, Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
+import { UsersModule } from '../users/users.module';
+import { AuthController } from './controllers/auth.controller';
 import { JwtStrategy } from './jwt-strategy/jwt.strategy';
+import { LocalStrategy } from './local-strategy/local.strategy';
+import { AuthService } from './providers/auth.service';
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
-    UsersModule,
+    forwardRef(() => UsersModule),
     PassportModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET,
@@ -20,6 +20,6 @@ import { JwtStrategy } from './jwt-strategy/jwt.strategy';
   ],
   controllers: [AuthController],
   providers: [AuthService, LocalStrategy, JwtStrategy],
-  exports: [JwtStrategy],
+  exports: [JwtStrategy, AuthService],
 })
 export class AuthModule {}
