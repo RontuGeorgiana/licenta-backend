@@ -47,7 +47,7 @@ export class TasksController {
   async getTasksByFolder(
     @Query('folderId') folderId: number,
     @UserParam() user: User,
-  ): Promise<Task[]> {
+  ){
     return await this.tasksService.getTasksByFolder(folderId, user);
   }
 

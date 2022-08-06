@@ -174,7 +174,14 @@ export class TasksService {
           .filter((task) => task.parent === null && task.status === Status[key])
           .map((task) => this.buildTaskTree(processedResults, task.id));
       });
-      return taskTree;
+      let teamId;
+      if (taskTree){
+        teamId = await this.foldersService.getTeamByFolder(folderId);
+      }
+      return{
+        taskTree,
+        teamId
+      };
     } catch (error) {
       throw new BadRequestException({ error });
     }
