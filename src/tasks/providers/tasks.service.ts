@@ -14,6 +14,7 @@ import { UsersService } from 'src/users/providers/users.service';
 import { In, Repository } from 'typeorm';
 import { CreateTaskDto } from '../dtos/create-task.dto';
 import { EditTaskDto } from '../dtos/edit-task.dto';
+import { TaskFilterDto } from '../dtos/task-filter.dto';
 import { Task } from '../entities/task.entity';
 
 @Injectable()
@@ -116,7 +117,11 @@ export class TasksService {
     }
   }
 
-  public async getTasksByFolder(folderId: number, user: User) {
+  public async getTasksByFolder(
+    folderId: number,
+    filters: TaskFilterDto,
+    user: User,
+  ) {
     if (!folderId) {
       throw new BadRequestException({
         error: { folderId },
@@ -138,7 +143,7 @@ export class TasksService {
         'task.name',
         'task.description',
         'task.dueDate',
-        'task.priority',
+        'task.priority AS priority',
         'task.status',
         'task.timeTracked',
         'task.estimation',
@@ -149,8 +154,25 @@ export class TasksService {
       ])
       .where(`task.folderId = ${folderId}`);
 
+    if (filters?.assignee && filters?.assignee === 'me') {
+      query.andWhere(`task.asignee = ${user.id}`);
+    }
+
+    if (filters?.priority) {
+      query.andWhere(`(priority = ${filters.priority})`);
+    }
+
+    if (filters?.type) {
+      query.andWhere(`task.type = '${filters.type}'`);
+    }
+
+    if (filters?.search) {
+      query.andWhere(`task.name LIKE '%${filters.search}%'`);
+    }
+
     try {
       let result = await query.getMany();
+      // console.log(result);
       const processedResults = await Promise.all(
         result.map(async (res): Promise<any> => {
           if (res.asignee !== null) {
@@ -168,19 +190,30 @@ export class TasksService {
           return res;
         }),
       );
+      // console.log(processedResults);
       let taskTree: any = {};
-      Object.keys(Status).forEach((key: any) => {
-        taskTree[key] = processedResults
-          .filter((task) => task.parent === null && task.status === Status[key])
-          .map((task) => this.buildTaskTree(processedResults, task.id));
+      Object.keys(Status).forEach(async (key: any) => {
+        taskTree[key] = await Promise.all(
+          processedResults
+            .filter(
+              (task) =>
+                this.taskRoot(task, processedResults) &&
+                task.status === Status[key],
+            )
+            .map(async (task) => {
+              console.log(await this.buildTaskTree(processedResults, task.id));
+              return await this.buildTaskTree(processedResults, task.id);
+            }),
+        );
       });
+      console.log(taskTree);
       let teamId;
-      if (taskTree){
+      if (taskTree) {
         teamId = await this.foldersService.getTeamByFolder(folderId);
       }
-      return{
+      return {
         taskTree,
-        teamId
+        teamId,
       };
     } catch (error) {
       throw new BadRequestException({ error });
@@ -347,18 +380,33 @@ export class TasksService {
     }
   }
 
-  private buildTaskTree(tasks: Task[], rootId?: number) {
-    const newTreeRoot = tasks.find((task) => task.id === rootId);
+  private async buildTaskTree(tasks: Task[], rootId?: number) {
+    let newTreeRoot = tasks.find((task) => task.id === rootId);
+    if (!newTreeRoot) {
+      const lastChild = this.taskRepository.findOne(rootId);
+      return lastChild;
+    }
     let tree: any = {
       ...newTreeRoot,
       children: [],
     };
-
     if (newTreeRoot.children) {
       for (const child of newTreeRoot.children) {
-        tree.children.push(this.buildTaskTree(tasks, child));
+        const childTree = await this.buildTaskTree(tasks, child);
+        if (childTree !== null) {
+          tree.children.push(childTree);
+        }
       }
     }
     return tree;
+  }
+
+  private taskRoot(task: Task, tasks: Task[]) {
+    if (task.parent === null) {
+      return true;
+    } else if (!tasks.find((parent) => parent.id === task.parent)) {
+      return true;
+    }
+    return false;
   }
 }

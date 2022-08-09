@@ -43,9 +43,7 @@ export class FoldersController {
 
   @UseGuards(JwtAuthGuard)
   @Get()
-  async getFoldersBySpace(
-    @Query('spaceId') spaceId: number,
-  ): Promise<Folder[]> {
+  async getFoldersBySpace(@Query('spaceId') spaceId: number) {
     return await this.foldersService.getFoldersBySpace(spaceId);
   }
 
@@ -64,6 +62,6 @@ export class FoldersController {
     @Query('folderId') folderId: number,
     @UserParam() user: User,
   ) {
-    await this.softDeleteFolder(folderId, user);
+    await this.foldersService.deleteFloder(folderId, user);
   }
 }

@@ -17,6 +17,7 @@ import { UserParam } from 'src/common/decorators/user.decorator';
 import { User } from 'src/users/entities/user.entity';
 import { CreateTaskDto } from '../dtos/create-task.dto';
 import { EditTaskDto } from '../dtos/edit-task.dto';
+import { TaskFilterDto } from '../dtos/task-filter.dto';
 import { Task } from '../entities/task.entity';
 import { TasksService } from '../providers/tasks.service';
 
@@ -46,9 +47,10 @@ export class TasksController {
   @Get()
   async getTasksByFolder(
     @Query('folderId') folderId: number,
+    @Query() filters: TaskFilterDto,
     @UserParam() user: User,
-  ){
-    return await this.tasksService.getTasksByFolder(folderId, user);
+  ) {
+    return await this.tasksService.getTasksByFolder(folderId, filters, user);
   }
 
   @UseGuards(JwtAuthGuard)

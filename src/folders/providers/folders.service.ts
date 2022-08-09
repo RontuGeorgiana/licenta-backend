@@ -96,14 +96,14 @@ export class FoldersService {
     }
   }
 
-  public async getFoldersBySpace(spaceId: number): Promise<Folder[]> {
+  public async getFoldersBySpace(spaceId: number) {
     if (!spaceId) {
       throw new BadRequestException({
         error: { spaceId },
       });
     }
 
-    const space = this.spacesService.getSpaceById(spaceId);
+    const space = await this.spacesService.getSpaceById(spaceId);
 
     if (!space) {
       throw new NotFoundException({
@@ -121,7 +121,7 @@ export class FoldersService {
       let folderTree: any = result
         .filter((folder) => folder.parent === null)
         .map((folder) => this.buildFolderTree(result, folder.id));
-      return folderTree;
+      return { folderTree, teamId: space.teamId };
     } catch (error) {
       throw new BadRequestException({
         error,
