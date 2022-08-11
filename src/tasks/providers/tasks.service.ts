@@ -7,6 +7,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { CommentsService } from 'src/comments/providers/comments.service';
 import { Status } from 'src/common/enums/status.enum';
 import { FoldersService } from 'src/folders/providers/folders.service';
 import { User } from 'src/users/entities/user.entity';
@@ -25,6 +26,8 @@ export class TasksService {
     @Inject(forwardRef(() => FoldersService))
     private readonly foldersService: FoldersService,
     private readonly usersService: UsersService,
+    @Inject(forwardRef(() => CommentsService))
+    private readonly commentsService: CommentsService,
   ) {}
 
   public async createTask(data: CreateTaskDto, user: User) {
@@ -82,7 +85,7 @@ export class TasksService {
     }
   }
 
-  public async getTaskById(taskId: number, user: User) {
+  public async getTaskById(taskId: number, user: User, teamId: number) {
     if (!taskId) {
       throw new BadRequestException({
         error: { taskId },
@@ -95,10 +98,23 @@ export class TasksService {
       });
     }
 
+    const userRole = await this.usersService.getUserRole(user.id, teamId);
+
+    if (!userRole) {
+      throw new ForbiddenException({
+        error: { user },
+      });
+    }
+
     try {
       let task = await this.taskRepository.findOne(taskId);
       const assignee = await this.usersService.getUserById(task.asignee, true);
       const subtasks = await this.getSubtasksByIds(task.children);
+      const comments = await this.commentsService.getCommentsByTaskId(
+        task.id,
+        user.id,
+        userRole,
+      );
       const processedTask = {
         ...task,
         asignee: assignee
@@ -108,6 +124,7 @@ export class TasksService {
             }
           : null,
         children: subtasks,
+        comments,
       };
       return processedTask;
     } catch (error) {
@@ -172,7 +189,6 @@ export class TasksService {
 
     try {
       let result = await query.getMany();
-      // console.log(result);
       const processedResults = await Promise.all(
         result.map(async (res): Promise<any> => {
           if (res.asignee !== null) {
@@ -190,7 +206,6 @@ export class TasksService {
           return res;
         }),
       );
-      // console.log(processedResults);
       let taskTree: any = {};
       Object.keys(Status).forEach(async (key: any) => {
         taskTree[key] = await Promise.all(
@@ -206,7 +221,6 @@ export class TasksService {
             }),
         );
       });
-      console.log(taskTree);
       let teamId;
       if (taskTree) {
         teamId = await this.foldersService.getTeamByFolder(folderId);

@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
+import { CommentsModule } from './comments/comments.module';
 import { CommonModule } from './common/common.module';
 import { TypeOrmConfigService } from './common/providers/TypeOrmConfigService.service';
 import { FoldersModule } from './folders/folders.module';
@@ -28,6 +29,7 @@ import { UsersModule } from './users/users.module';
     FoldersModule,
     AuthModule,
     TasksModule,
+    CommentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

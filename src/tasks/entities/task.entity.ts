@@ -1,8 +1,9 @@
 import { Exclude } from 'class-transformer';
+import { Comment } from 'src/comments/entities/comment.entity';
 import { BaseEntity } from 'src/common/base/base-entity.class';
 import { Status } from 'src/common/enums/status.enum';
 import { Folder } from 'src/folders/entities/folder.entity';
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm';
+import { Column, Entity, JoinColumn, ManyToOne, OneToMany } from 'typeorm';
 
 @Entity()
 export class Task extends BaseEntity {
@@ -49,4 +50,7 @@ export class Task extends BaseEntity {
   @ManyToOne(() => Folder, (folder) => folder.tasks)
   @JoinColumn({ name: 'folder_id' })
   folder: Folder;
+
+  @OneToMany(() => Comment, (comment) => comment.task)
+  comments: Comment[];
 }

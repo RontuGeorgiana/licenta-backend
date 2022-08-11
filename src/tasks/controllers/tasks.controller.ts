@@ -39,8 +39,12 @@ export class TasksController {
 
   @UseGuards(JwtAuthGuard)
   @Get('/:id')
-  async getTaskById(@Param('id') id: number, @UserParam() user: User) {
-    return await this.tasksService.getTaskById(id, user);
+  async getTaskById(
+    @Param('id') id: number,
+    @Query('teamId') teamId: number,
+    @UserParam() user: User,
+  ) {
+    return await this.tasksService.getTaskById(id, user, teamId);
   }
 
   @UseGuards(JwtAuthGuard)

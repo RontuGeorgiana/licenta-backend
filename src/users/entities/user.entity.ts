@@ -1,5 +1,6 @@
 import { ApiHideProperty } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
+import { Comment } from 'src/comments/entities/comment.entity';
 import { BaseEntity } from 'src/common/base/base-entity.class';
 import { Membership } from 'src/memberships/entities/membership.entity';
 import { Column, Entity, Index, OneToMany } from 'typeorm';
@@ -23,4 +24,7 @@ export class User extends BaseEntity {
 
   @OneToMany(() => Membership, (membership) => membership.user)
   memberships: Membership[];
+
+  @OneToMany(() => Comment, (comment) => comment.user)
+  comments: Comment[];
 }
