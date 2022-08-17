@@ -63,6 +63,29 @@ export class UsersService {
     return user;
   }
 
+  public async getMinimalUserById(userId: number) {
+    if (!userId) {
+      throw new BadRequestException({
+        error: { userId },
+      });
+    }
+
+    const user = await this.userRepository.findOne(userId);
+
+    if (!user) {
+      throw new NotFoundException({
+        error: { userId },
+      });
+    }
+
+    return {
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      id: user.id,
+    };
+  }
+
   public async getUserByEmail(email: string) {
     if (!email) {
       throw new BadRequestException({

@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Role } from 'src/common/enums/role.enum';
+import { EventsService } from 'src/events/providers/events.service';
 import { TeamsService } from 'src/teams/providers/teams.service';
 import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/providers/users.service';
@@ -25,6 +26,7 @@ export class MembershipsService {
     @Inject(forwardRef(() => TeamsService))
     private readonly teamsService: TeamsService,
     private readonly usersService: UsersService,
+    private readonly eventsService: EventsService,
   ) {}
 
   public async createMembership(
@@ -56,7 +58,7 @@ export class MembershipsService {
       }
     }
 
-    const team = await this.teamsService.getTeamById(data.teamId);
+    const team = await this.teamsService.getTeamById(data.teamId, operator);
 
     if (!team) {
       throw new NotFoundException({
@@ -117,7 +119,7 @@ export class MembershipsService {
       }
     });
 
-    const team = await this.teamsService.getTeamById(teamId);
+    const team = await this.teamsService.getTeamById(teamId, operator);
 
     if (!team) {
       throw new NotFoundException({
@@ -158,6 +160,7 @@ export class MembershipsService {
     teamId: number,
     user: User,
     filter: MembershipFilterDto,
+    onlyAvailable: boolean = false,
   ) {
     if (!user) {
       throw new ForbiddenException({
@@ -191,6 +194,7 @@ export class MembershipsService {
         'user.email AS email',
       ])
       .leftJoin('membership.user', 'user')
+      .leftJoin('user.events', 'events')
       .where(`membership.teamId = ${teamId}`);
 
     if (filter?.search && filter?.search !== '') {
@@ -204,6 +208,16 @@ export class MembershipsService {
 
     try {
       const result = await query.execute();
+      if (onlyAvailable) {
+        const userIds = await result.map((res: any) => res.userId);
+
+        const awayMembers = await this.eventsService.getLeavesByUserIds(
+          userIds,
+        );
+
+        return result.filter((res) => !awayMembers.includes(res.userId));
+      }
+
       return result;
     } catch (error) {
       throw new BadRequestException({

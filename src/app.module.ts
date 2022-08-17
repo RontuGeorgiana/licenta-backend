@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { CommentsModule } from './comments/comments.module';
 import { CommonModule } from './common/common.module';
 import { TypeOrmConfigService } from './common/providers/TypeOrmConfigService.service';
+import { EventsModule } from './events/events.module';
 import { FoldersModule } from './folders/folders.module';
 import { MembershipsModule } from './memberships/memberships.module';
 import { SpacesModule } from './spaces/spaces.module';
@@ -30,6 +31,7 @@ import { UsersModule } from './users/users.module';
     AuthModule,
     TasksModule,
     CommentsModule,
+    EventsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

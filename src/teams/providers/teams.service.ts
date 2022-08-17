@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Role } from 'src/common/enums/role.enum';
+import { EventsService } from 'src/events/providers/events.service';
 import { MembershipsService } from 'src/memberships/providers/memberships.service';
 import { SpacesService } from 'src/spaces/providers/spaces.service';
 import { User } from 'src/users/entities/user.entity';
@@ -26,6 +27,7 @@ export class TeamsService {
     private readonly usersService: UsersService,
     @Inject(forwardRef(() => SpacesService))
     private readonly spacesService: SpacesService,
+    private readonly eventsService: EventsService,
   ) {}
 
   public async createTeam(user: User, { name }: CreateTeamDto) {
@@ -54,22 +56,32 @@ export class TeamsService {
     return result;
   }
 
-  public async getTeamById(teamId: number): Promise<Team> {
+  public async getTeamById(teamId: number, user: User): Promise<Team> {
     if (!teamId) {
       throw new BadRequestException({
         error: teamId,
       });
     }
 
-    const team = this.teamRepository.findOne(teamId);
+    const query = this.teamRepository
+      .createQueryBuilder('team')
+      .select(['team.id', 'team.name', 'memberships.role'])
+      .where(`team.id = ${teamId} AND memberships.id = ${user.id}`)
+      .leftJoin('team.memberships', 'memberships')
+      .leftJoinAndSelect('team.spaces', 'spaces');
 
-    if (!team) {
-      throw new NotFoundException({
-        error: teamId,
+    try {
+      const team = await query.getOne();
+      const response = {
+        ...team,
+        role: team.memberships[0].role,
+      };
+      return response;
+    } catch (error) {
+      throw new BadRequestException({
+        error,
       });
     }
-
-    return team;
   }
 
   public async getTeamsByUser(user: User): Promise<any> {
@@ -180,7 +192,11 @@ export class TeamsService {
       teamToDelete.id,
     ]);
 
-    if (!spaces) {
+    const events = await this.eventsService.deleteEventsByTeamIds([
+      teamToDelete.id,
+    ]);
+
+    if (!spaces || !events) {
       throw new BadRequestException({
         error: { teamId },
       });

@@ -43,6 +43,15 @@ export class TeamsController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get('/:id')
+  async getTeamById(
+    @Param('id') teamId: number,
+    @UserParam() user: User,
+  ): Promise<any> {
+    return this.teamsService.getTeamById(teamId, user);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Patch('/rename-team/:id')
   async renameTeam(
     @Param('id') id: number,

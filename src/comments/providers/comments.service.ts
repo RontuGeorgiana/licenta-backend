@@ -11,7 +11,7 @@ import { Role } from 'src/common/enums/role.enum';
 import { TasksService } from 'src/tasks/providers/tasks.service';
 import { User } from 'src/users/entities/user.entity';
 import { UsersService } from 'src/users/providers/users.service';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { CreateCommentDto } from '../dtos/create-comment.dto';
 import { Comment } from '../entities/comment.entity';
 
@@ -138,6 +138,24 @@ export class CommentsService {
       throw new BadRequestException({
         error,
       });
+    }
+  }
+
+  public async deleteCommentsByTaskIds(taskIds: number[]) {
+    if (!taskIds || taskIds.length === 0) {
+      throw new BadRequestException({
+        error: { taskIds },
+      });
+    }
+
+    try {
+      const result = await this.commentRepository.update(
+        { taskId: In(taskIds) },
+        { deletedOn: new Date() },
+      );
+      return result;
+    } catch (error) {
+      throw new BadRequestException({ error });
     }
   }
 

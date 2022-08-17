@@ -301,6 +301,16 @@ export class TasksService {
       });
     }
 
+    const comments = await this.commentsService.deleteCommentsByTaskIds([
+      taskToDelete.id,
+    ]);
+
+    if (!comments) {
+      throw new BadRequestException({
+        error: { taskId: taskToDelete.id },
+      });
+    }
+
     taskToDelete = {
       ...taskToDelete,
       deletedOn: new Date(),
@@ -323,6 +333,32 @@ export class TasksService {
           folderIds,
         },
       });
+    }
+
+    let tasks = await this.taskRepository
+      .createQueryBuilder('task')
+      .select('task.id as id')
+      .where(`task.folderId IN (${folderIds})`)
+      .execute();
+
+    if (!tasks && tasks?.length !== 0) {
+      throw new NotFoundException({ error: { folderIds } });
+    }
+
+    if (tasks?.length !== 0) {
+      tasks = tasks.map((task) => task.id);
+
+      const comments = await this.commentsService.deleteCommentsByTaskIds(
+        tasks,
+      );
+
+      if (!comments) {
+        throw new BadRequestException({
+          error: {
+            tasks,
+          },
+        });
+      }
     }
 
     try {

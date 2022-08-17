@@ -1,5 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { EventsModule } from 'src/events/events.module';
 import { MembershipsModule } from 'src/memberships/memberships.module';
 import { SpacesModule } from 'src/spaces/spaces.module';
 import { UsersModule } from 'src/users/users.module';
@@ -13,6 +14,7 @@ import { TeamsService } from './providers/teams.service';
     forwardRef(() => MembershipsModule),
     UsersModule,
     forwardRef(() => SpacesModule),
+    EventsModule,
   ],
   controllers: [TeamsController],
   providers: [TeamsService],

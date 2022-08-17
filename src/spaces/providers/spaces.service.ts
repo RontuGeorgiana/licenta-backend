@@ -47,7 +47,7 @@ export class SpacesService {
       });
     }
 
-    const team = await this.teamsService.getTeamById(data.teamId);
+    const team = await this.teamsService.getTeamById(data.teamId, operator);
     if (!team) {
       throw new NotFoundException({
         error: {

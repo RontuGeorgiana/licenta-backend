@@ -60,12 +60,14 @@ export class MembershipsController {
   async getMembershipsByTeam(
     @Query('teamId') teamId: number,
     @Query() filter: MembershipFilterDto,
+    @Query('available') available: boolean = false,
     @UserParam() user: User,
   ) {
     return await this.membershipsService.getMembershipsByTeam(
       teamId,
       user,
       filter,
+      available,
     );
   }
 
