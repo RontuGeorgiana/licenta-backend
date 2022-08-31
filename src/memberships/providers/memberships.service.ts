@@ -217,6 +217,7 @@ export class MembershipsService {
 
         const awayMembers = await this.eventsService.getLeavesByUserIds(
           userIds,
+          teamId,
         );
 
         return result.filter((res) => !awayMembers.includes(res.userid));

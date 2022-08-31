@@ -347,7 +347,7 @@ export class EventsService {
     }
   }
 
-  public async getLeavesByUserIds(userIds: number[]) {
+  public async getLeavesByUserIds(userIds: number[], teamId: number) {
     if (!userIds || userIds.length == 0) {
       throw new BadRequestException({
         error: {
@@ -366,7 +366,7 @@ export class EventsService {
       .createQueryBuilder('event')
       .select(['event.organizerId'])
       .where(
-        `(event.organizerId IN (${userIds})) AND (event.start <= '${todayStart.toISOString()}'::date) AND (event.end >= '${todayStart.toISOString()}'::date) AND (event.type = 'leave')`,
+        `(event.organizerId IN (${userIds})) AND (event.teamId = ${teamId}) AND (event.start <= '${todayStart.toISOString()}'::date) AND (event.end >= '${todayStart.toISOString()}'::date) AND (event.type = 'leave')`,
       );
 
     try {
