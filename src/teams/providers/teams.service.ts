@@ -56,26 +56,39 @@ export class TeamsService {
     return result;
   }
 
-  public async getTeamById(teamId: number, user: User): Promise<Team> {
+  public async getTeamById(
+    teamId: number,
+    user: User,
+    systemAction: boolean = false,
+  ): Promise<Team> {
     if (!teamId) {
       throw new BadRequestException({
         error: teamId,
       });
     }
-
-    const query = this.teamRepository
-      .createQueryBuilder('team')
-      .select(['team.id', 'team.name', 'memberships.role'])
-      .where(`team.id = ${teamId} AND memberships.id = ${user.id}`)
-      .leftJoin('team.memberships', 'memberships')
-      .leftJoinAndSelect('team.spaces', 'spaces');
+    let query;
+    if (!systemAction) {
+      query = this.teamRepository
+        .createQueryBuilder('team')
+        .select(['team.id', 'team.name', 'memberships.role'])
+        .where(`(team.id = ${teamId}) AND (memberships.userId = ${user.id})`)
+        .leftJoin('team.memberships', 'memberships')
+        .leftJoinAndSelect('team.spaces', 'spaces');
+    } else {
+      query = this.teamRepository
+        .createQueryBuilder('team')
+        .select(['team.id', 'team.name'])
+        .where(`team.id = ${teamId}`);
+    }
 
     try {
       const team = await query.getOne();
-      const response = {
+      let response = {
         ...team,
-        role: team.memberships[0].role,
       };
+      if (team?.memberships) {
+        response['role'] = team?.memberships[0]?.role;
+      }
       return response;
     } catch (error) {
       throw new BadRequestException({

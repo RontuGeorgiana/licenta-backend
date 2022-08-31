@@ -58,7 +58,11 @@ export class MembershipsService {
       }
     }
 
-    const team = await this.teamsService.getTeamById(data.teamId, operator);
+    const team = await this.teamsService.getTeamById(
+      data.teamId,
+      operator,
+      systemAction,
+    );
 
     if (!team) {
       throw new NotFoundException({
@@ -176,11 +180,11 @@ export class MembershipsService {
 
     const userRole = await this.usersService.getUserRole(user.id, teamId);
 
-    if (![Role.Admin.valueOf(), Role.Owner.valueOf()].includes(userRole)) {
-      throw new ForbiddenException({
-        error: { userRole },
-      });
-    }
+    // if (![Role.Admin.valueOf(), Role.Owner.valueOf()].includes(userRole)) {
+    //   throw new ForbiddenException({
+    //     error: { userRole },
+    //   });
+    // }
 
     const query = this.membershipRepository
       .createQueryBuilder('membership')
@@ -194,7 +198,6 @@ export class MembershipsService {
         'user.email AS email',
       ])
       .leftJoin('membership.user', 'user')
-      .leftJoin('user.events', 'events')
       .where(`membership.teamId = ${teamId}`);
 
     if (filter?.search && filter?.search !== '') {
@@ -208,14 +211,15 @@ export class MembershipsService {
 
     try {
       const result = await query.execute();
+
       if (onlyAvailable) {
-        const userIds = await result.map((res: any) => res.userId);
+        const userIds = await result.map((res: any) => res.userid);
 
         const awayMembers = await this.eventsService.getLeavesByUserIds(
           userIds,
         );
 
-        return result.filter((res) => !awayMembers.includes(res.userId));
+        return result.filter((res) => !awayMembers.includes(res.userid));
       }
 
       return result;

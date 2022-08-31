@@ -52,6 +52,8 @@ export class EventsService {
 
     const newEvent: Partial<Event> = {
       ...data,
+      start: new Date(data.start),
+      end: new Date(data.end),
       approved: data.type === EventType.LEAVE ? false : null,
       organizerId: user.id,
     };
@@ -90,13 +92,19 @@ export class EventsService {
 
     const query = this.eventRepository
       .createQueryBuilder('event')
-      .select(['event.id', 'event.type', 'event.start', 'event.name'])
+      .select([
+        'event.id',
+        'event.type',
+        'event.start',
+        'event.end',
+        'event.name',
+      ])
       .where(
         `((event.organizerId = ${user.id}) OR (${user.id} = ANY(event.participants))) AND event.teamId = ${teamId}`,
       );
 
     if (filters.start) {
-      query.andWhere(`'${filters.start}'::date <= event.start`);
+      query.andWhere(`'${filters.start}'::date < event.start`);
     }
 
     if (filters.end) {
@@ -348,16 +356,23 @@ export class EventsService {
       });
     }
 
+    const todayStart = new Date();
+    const todayEnd = new Date();
+
+    todayStart.setHours(new Date().getTimezoneOffset() / -60, 0, 0, 0);
+    todayEnd.setHours(24 + new Date().getTimezoneOffset() / -60, 0, 0, 0);
+
     const query = this.eventRepository
       .createQueryBuilder('event')
       .select(['event.organizerId'])
       .where(
-        `(event.organizerId IN (${userIds})) AND (event.start <= ${new Date()}) AND (event.end >= ${new Date()}) AND (event.type = 'leave')`,
+        `(event.organizerId IN (${userIds})) AND (event.start <= '${todayStart.toISOString()}'::date) AND (event.end >= '${todayStart.toISOString()}'::date) AND (event.type = 'leave')`,
       );
 
     try {
-      const result = query.getMany();
-      return result;
+      const result = await query.getMany();
+      const ids = result.map((event) => event.organizerId);
+      return ids;
     } catch (error) {
       throw new BadRequestException({
         error,

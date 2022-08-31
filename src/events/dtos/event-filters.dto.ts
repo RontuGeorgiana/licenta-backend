@@ -1,17 +1,17 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsDate, IsEnum, IsOptional } from 'class-validator';
+import { IsEnum, IsOptional, IsString } from 'class-validator';
 import { EventType } from 'src/common/enums/eventType.enum';
 
 export class EventFilterDto {
   @ApiPropertyOptional()
   @IsOptional()
-  @IsDate()
-  start: Date;
+  @IsString()
+  start: string;
 
   @ApiPropertyOptional()
   @IsOptional()
-  @IsDate()
-  end: Date;
+  @IsString()
+  end: string;
 
   @ApiPropertyOptional()
   @IsOptional()

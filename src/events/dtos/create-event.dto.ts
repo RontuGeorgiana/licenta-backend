@@ -1,11 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsDate,
-  IsEnum,
-  IsNumber,
-  IsOptional,
-  IsString,
-} from 'class-validator';
+import { IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
 import { EventType } from 'src/common/enums/eventType.enum';
 
 export class CreateEventDto {
@@ -22,12 +16,12 @@ export class CreateEventDto {
   type: EventType;
 
   @ApiProperty({ description: 'Event start date and time' })
-  @IsDate()
-  start: Date;
+  @IsString()
+  start: string;
 
   @ApiProperty({ description: 'Event end date and time' })
-  @IsDate()
-  end: Date;
+  @IsString()
+  end: string;
 
   @ApiProperty({ description: 'Event name' })
   @IsString()

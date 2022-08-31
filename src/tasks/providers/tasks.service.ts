@@ -216,7 +216,6 @@ export class TasksService {
                 task.status === Status[key],
             )
             .map(async (task) => {
-              console.log(await this.buildTaskTree(processedResults, task.id));
               return await this.buildTaskTree(processedResults, task.id);
             }),
         );
@@ -235,8 +234,6 @@ export class TasksService {
   }
 
   public async editTaskById(data: EditTaskDto, user: User) {
-    console.log(data);
-
     if (!data.taskId) {
       throw new BadRequestException({
         error: { taskId: data.taskId },
