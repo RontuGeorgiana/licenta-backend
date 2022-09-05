@@ -87,6 +87,52 @@ export class SpacesService {
     return space;
   }
 
+  public async getNavigationBySpace(spaceId: number, user:User){
+    if(!user){
+      throw new ForbiddenException({
+        error: {user}
+      })
+    }
+
+    if(!spaceId){
+      throw new BadRequestException({
+        error: {spaceId}
+      })
+    }
+
+    const teamId = (await this.spaceRepository.findOne(spaceId)).teamId;
+
+    const userRole = await this.usersService.getUserRole(user.id, teamId);
+
+    if(!userRole){
+      throw new ForbiddenException({
+        error: {user}
+      })
+    }
+    
+
+    try{
+      
+      let result;
+      const team = await this.teamsService.getTeamById(teamId, user);
+      const spaces = await Promise.all(team.spaces.map(async (space) => ({
+        id: space.id,
+        name: space.name,
+        folders: (await this.foldersService.getFoldersBySpace(space.id)).folderTree
+      })))
+      result = {
+        id: team.id,
+        name: team.name,
+        spaces
+      }
+      return result;
+    } catch(error) {
+      throw new BadRequestException({
+        error
+      })
+    }
+  }
+
   public async softDeleteSpaceById(
     spaceId: number,
     operator: User,

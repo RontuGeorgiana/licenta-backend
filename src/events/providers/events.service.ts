@@ -100,7 +100,7 @@ export class EventsService {
         'event.name',
       ])
       .where(
-        `((event.organizerId = ${user.id}) OR (${user.id} = ANY(event.participants))) AND event.teamId = ${teamId}`,
+        `((event.organizerId = ${user.id}) OR (${user.id} = ANY(event.participants))) AND (event.teamId = ${teamId})`,
       );
 
     if (filters.start) {

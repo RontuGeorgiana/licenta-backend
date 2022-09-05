@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   Param,
   Patch,
   Post,
@@ -32,6 +33,15 @@ export class SpacesController {
     @Body() createSpaceDto: CreateSpaceDto,
   ): Promise<Space> {
     return await this.spacesService.createSpace(createSpaceDto, user);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get(':id/navigation')
+  async getSpaceNavigation(
+    @UserParam()user: User,
+    @Param('id')spaceId: number
+  ){
+    return await this.spacesService.getNavigationBySpace(spaceId, user);
   }
 
   @UseGuards(JwtAuthGuard)
