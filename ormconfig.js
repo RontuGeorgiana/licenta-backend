@@ -10,8 +10,9 @@ module.exports = {
     cli: {
       migrationsDir: 'src/migrations',
     },
+    synchronize: process.env.NODE_ENV !== 'local',
     ssl:
-      process.env.NODE_ENV === 'local' // enable SSL for REMOTE deployment, and disable for local to let migrations work
+      process.env.NODE_ENV === 'local'
         ? false
         : {
             rejectUnauthorized: false,
