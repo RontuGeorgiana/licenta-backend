@@ -160,7 +160,7 @@ export class TasksService {
         'task.name',
         'task.description',
         'task.dueDate',
-        'task.priority AS priority',
+        'task.priority',
         'task.status',
         'task.timeTracked',
         'task.estimation',
@@ -189,6 +189,7 @@ export class TasksService {
 
     try {
       let result = await query.getMany();
+      console.log(result);
       const processedResults = await Promise.all(
         result.map(async (res): Promise<any> => {
           if (res.asignee !== null) {
